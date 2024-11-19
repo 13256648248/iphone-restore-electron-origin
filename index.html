@@ -1,14 +1,176 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <title>Dialog</title>
-  </head>
-  <body>
-    <button type="button" id="btn">Open a File</button>
-    File path: <strong id="filePath"></strong>
-    <script src='./renderer.js'></script>
-  </body>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>设备管理</title>
+  <style>
+    .device-page {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #f8f9fb;
+      color: #133e87;
+    }
+
+    /* Header section */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #133e87;
+      color: #cbdceb;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .search-btn {
+      font-size: 1.2rem;
+      background: none;
+      border: none;
+      color: #cbdceb;
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: color 0.3s ease;
+    }
+
+    .search-btn:hover {
+      color: #608bc1;
+    }
+
+    /* Content section */
+    .content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .device-info {
+      background-color: #ffffff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 100%;
+      color: #133e87;
+    }
+
+    .device-details h2 {
+      text-align: center;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    .info-grid div {
+      padding: 0.2rem 0;
+    }
+
+    /* Footer action buttons */
+    .device-actions {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 1rem;
+      background-color: #133e87;
+    }
+
+    .action-btn {
+      padding: 0.6rem 1rem;
+      background-color: #608bc1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+
+    .action-btn:hover {
+      background-color: #4c6a9f;
+    }
+
+    .start-btn {
+      padding: 0.6rem 1.2rem;
+      background-color: #133e87;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    .start-btn:hover {
+      background-color: #0f2c5c;
+    }
+  </style>
+</head>
+<body>
+  <div class="device-page">
+    <!-- Header with centered title and search icon -->
+    <header class="header">
+      <h1 class="title">设备管理</h1>
+      <button class="search-btn" aria-label="Search" onclick="searchFunction()">🔍</button>
+    </header>
+
+    <div>
+      <button onclick="selectFolder()">选择文件夹</button>
+      <p id="folderName">选中的文件夹: 未选择文件夹</p>
+    </div>
+
+    <button onclick="fetchDeviceInfo()">获取设备信息</button>
+    <button onclick="deviceBackUp2()">backUpTo2</button>
+
+    <!-- Device Information Card -->
+    <main class="content" id="deviceInfoSection">
+      <div class="device-info" style="display: none;">
+        <div class="device-details">
+          <h2 id="deviceName"></h2>
+          <div class="info-grid">
+            <div>固件版本: <span id="firmwareVersion"></span></div>
+            <div>激活状态: <span id="activationState"></span></div>
+            <div>设备型号: <span id="modelNumber"></span></div>
+            <div>产品型号: <span id="productType"></span></div>
+            <div>序列号: <span id="serialNumber"></span></div>
+            <div>硬件平台: <span id="hardwarePlatform"></span></div>
+            <div>CPU架构: <span id="cpuArchitecture"></span></div>
+            <div>Wi-Fi 地址: <span id="wifiAddress"></span></div>
+            <div>蓝牙地址: <span id="bluetoothAddress"></span></div>
+            <div>设备颜色: <span id="deviceColor"></span></div>
+            <div>生产日期: <span id="productionDate"></span></div>
+            <div>区域信息: <span id="regionInfo"></span></div>
+            <div>iCloud状态: <span id="icloudStatus"></span></div>
+            <div>SIM状态: <span id="simStatus"></span></div>
+            <div>唯一设备ID: <span id="uniqueDeviceID"></span></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom action buttons for language options and start button -->
+    <footer class="device-actions">
+      <button class="action-btn">可更新中文</button>
+      <button class="action-btn">Can be updated English</button>
+      <button class="start-btn">开始</button>
+    </footer>
+  </div>
+  <script src='./renderer.js'></script>
+
+</body>
 </html>
