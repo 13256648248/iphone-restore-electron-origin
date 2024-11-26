@@ -1,144 +1,129 @@
 let deviceInfo = {};
-const BasicCost = 5;
-/** 定时去取设备信息 如果取到就关闭，没取到继续 */
+const BASIC_COST = 5;
 // const fetchDeviceInfoInterval = setInterval(fetchDeviceInfo, 1000);
 
-/** 定时去取设备信息，如果取到就显示卡片盒子，没取到继续尝试 */
+/**
+ * 定时尝试获取设备信息，成功后更新 UI，失败则继续尝试
+ */
 async function fetchDeviceInfo() {
   try {
-    const fetchedInfoString = await window.electronAPI.getDeviceInfo(); // 获取纯字符串数据
-    deviceInfo = extractAllData(fetchedInfoString); // 提取所有字段信息
+    const fetchedInfoString = await window.electronAPI.getDeviceInfo(); // 获取设备信息字符串
+    deviceInfo = extractDeviceData(fetchedInfoString); // 解析设备信息
 
-    clearInterval(fetchDeviceInfoInterval);
-    // 更新 UI
-    updateDeviceInfoUI(deviceInfo);
-    showBox('card-box'); // 切换到卡片盒子视图
+    clearInterval(fetchDeviceInfoInterval); // 停止定时器
+    updateDeviceInfoUI(deviceInfo); // 更新设备信息到 UI
+    toggleBox('card-box'); // 显示卡片盒子
   } catch (error) {
     console.error('获取设备信息失败:', error);
-    showBox('normal-box'); // 切换到默认盒子视图
+    toggleBox('normal-box'); // 切换到默认盒子视图
   }
 }
 
-/**
- * 根据设备信息更新页面中的内容
- * @param {Object} deviceInfo - 设备信息对象
- */
 function updateDeviceInfoUI(deviceInfo) {
-  for (const [key, value] of Object.entries(deviceInfo)) {
-    const elementId = key.toLowerCase(); // 将驼峰命名转换为小写连字符
-    const element = document.getElementById(elementId);
+  Object.entries(deviceInfo).forEach(([key, value]) => {
+    const element = document.getElementById(key.toLowerCase());
     if (element) {
       element.textContent = value;
     }
-  }
+  });
 }
 
-
-/**
- * 提取所有设备信息并返回一个对象
- * @param {string} str - 设备信息字符串
- * @returns {object} - 提取出的设备信息对象
- */
-function extractAllData(str) {
+function extractDeviceData(rawData) {
   const regex = /(\w+):\s*([^\n]+)/g;
+  const result = {};
   let match;
-  const deviceInfo = {};
 
-  // 使用正则表达式提取所有键值对
-  while ((match = regex.exec(str)) !== null) {
-    const key = match[1].trim(); // 字段名
-    const value = match[2].trim(); // 字段值
-    deviceInfo[key] = value;
+  while ((match = regex.exec(rawData)) !== null) {
+    result[match[1].trim()] = match[2].trim(); // 提取键值对
   }
 
-  return deviceInfo;
+  return result;
 }
 
 /**
- * 备份设备信息，检查登录状态或设备注册状态
+ * 备份设备信息：先检查登录状态或设备注册状态
+ * @param {string} lang - 语言参数
  */
-async function deviceBackup(lang) {
+async function backupDeviceInfo(lang) {
   const uniqueDeviceID = deviceInfo.UniqueDeviceID;
 
   // if (!uniqueDeviceID) {
-  //   return alert('请先连接设备');
+  //   return window.alert('请先连接设备');
   // }
-
   try {
-    await checkRegistrationOrLogin(lang);
+    await handleAuthentication(lang);
   } catch (error) {
     console.error('备份设备信息时出错:', error);
+    showErrorMessage('备份失败，请稍后再试。');
   }
 }
 
 /**
- * 检查登录状态，执行相应逻辑
+ * 检查登录状态或设备注册状态
+ * @param {string} lang - 语言参数
  */
-async function checkRegistrationOrLogin(lang) {
-  const token = localStorage.getItem('token'); // 从本地存储获取 token
+async function handleAuthentication(lang) {
+  const token = localStorage.getItem('token');
 
   if (token) {
-    // 已登录，处理用户信息
-    await handleLoggedInUser(token);
+    await processLoggedInUser(token);
   } else {
-    // 未登录，检查设备注册情况
-    await handleDeviceRegistration(lang);
+    await checkDeviceRegistrationStatus(lang);
   }
 }
 
 /**
- * 已登录用户的处理逻辑
- * @param {string} token - 登录的用户 token
+ * 已登录用户处理逻辑
+ * @param {string} token - 用户 token
  */
-async function handleLoggedInUser(token) {
+async function processLoggedInUser(token) {
   try {
-    const userInfo = await getUserInfo(token);
+    const userInfo = await fetchUserInfo(token);
 
-    if (userInfo.data.coin >= BasicCost) {
-      await upgradeUser(token);
+    if (userInfo.data.coin >= BASIC_COST) {
+      await initiateUpgrade(token);
     } else {
-      alert('金币不足，无法升级！');
+      showErrorMessage('金币不足，无法升级！');
     }
   } catch (error) {
-    console.error('获取用户信息失败:', error);
-    alert('获取用户信息失败，请稍后再试');
+    console.error('处理登录用户时出错:', error);
+    showErrorMessage('获取用户信息失败，请稍后再试。');
   }
 }
 
 /**
- * 未登录状态下根据设备 ID 检查注册情况
+ * 未登录状态检查设备注册
+ * @param {string} lang - 语言参数
  */
-async function handleDeviceRegistration(lang) {
-  const uniqueDeviceID = deviceInfo.UniqueDeviceID;
-
+async function checkDeviceRegistrationStatus(lang) {
   try {
-    const registrationStatus = await checkDeviceRegistration(uniqueDeviceID);
+    const registration = await checkDeviceRegistration(deviceInfo.UniqueDeviceID);
 
-    if (registrationStatus.isRegistered) {
-      await upgradeUser(null, lang); // 假设升级接口不需要 token
+    if (registration.isRegistered) {
+      await initiateUpgrade(null, lang); // 假设接口支持未登录用户
     } else {
-      alert('设备未注册，请先注册');
+      showErrorMessage('设备未注册，请先完成注册。');
     }
   } catch (error) {
     console.error('设备注册检查失败:', error);
-    alert('设备注册检查失败，请稍后再试');
+    showErrorMessage('设备注册检查失败，请稍后再试。');
   }
 }
 
 /**
  * 获取用户信息
- * @param {string} token - 登录的用户 token
+ * @param {string} token - 用户 token
  */
-async function getUserInfo(token) {
-
-
+async function fetchUserInfo(token) {
   const response = await axios.get('https://restore.msgqu.com/api/v1/user/info', {
     headers: { Authorization: `Bearer ${token}` },
   });
-  console.log('response', response);
-  
-  if (response.status !== 200 || response.data.code !== 0 ) throw new Error('用户信息获取失败');
-  return  response.data;
+
+  if (response.status !== 200 || response.data.code !== 0) {
+    throw new Error('获取用户信息失败');
+  }
+
+  return response.data;
 }
 
 /**
@@ -147,8 +132,12 @@ async function getUserInfo(token) {
  */
 async function checkDeviceRegistration(deviceId) {
   const response = await fetch(`/api/device/registration/${deviceId}`);
-  if (!response.ok) throw new Error('设备注册检查失败');
-  return await response.json();
+
+  if (!response.ok) {
+    throw new Error('设备注册检查失败');
+  }
+
+  return response.json();
 }
 
 /**
@@ -156,24 +145,30 @@ async function checkDeviceRegistration(deviceId) {
  * @param {string|null} token - 用户 token，可选
  * @param {string} lang - 语言参数
  */
-async function upgradeUser(token = null, lang) {
-  const uniqueDeviceID = deviceInfo.UniqueDeviceID;
-
-  window.electronAPI.sendUniqueDeviceID(uniqueDeviceID, lang);
-  console.log(`设备ID: ${uniqueDeviceID} 备份开始`);
+async function initiateUpgrade(token = null, lang) {
+  const { UniqueDeviceID } = deviceInfo;
+  window.electronAPI.sendUniqueDeviceID(UniqueDeviceID, lang);
+  console.log(`设备 ID: ${UniqueDeviceID} 正在升级`);
 }
 
-showBox('normal-box'); 
 /**
  * 切换显示的盒子
- * @param {string} id - 盒子的 ID
+ * @param {string} boxId - 要显示的盒子 ID
  */
-function showBox(Id){
-  if(Id === 'card-box'){
-    document.getElementById('card-box').style.display = 'block';
-    document.getElementById('normal-box').style.display = 'none';
-  }else{
-    document.getElementById('card-box').style.display = 'none';
-    document.getElementById('normal-box').style.display = 'block';
-  }
+function toggleBox(boxId) {
+  const boxes = ['card-box', 'normal-box'];
+  boxes.forEach((id) => {
+    document.getElementById(id).style.display = id === boxId ? 'block' : 'none';
+  });
 }
+
+/**
+ * 显示错误消息
+ * @param {string} message - 错误信息
+ */
+function showErrorMessage(message) {
+  alert(message); // 替换为更友好的错误提示逻辑（如弹窗或页面提示）
+}
+
+// 默认显示普通盒子
+toggleBox('normal-box');
