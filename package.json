@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron-forge start",
+    "prepackage": "node scripts/compile.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "electron-forge package",
     "make": "electron-forge make"
@@ -23,7 +24,9 @@
     "electron": "^33.2.0"
   },
   "dependencies": {
+    "bytenode": "^1.5.6",
     "electron-squirrel-startup": "^1.0.1",
+    "javascript-obfuscator": "^4.1.1",
     "plist": "^3.1.0"
   }
 }
