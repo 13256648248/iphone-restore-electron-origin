@@ -4,11 +4,14 @@
     font-size: 24px;
   }
 
-  /* 头像按钮 */
-  .login-btn {
+  .user-info{
     position: absolute;
     top: 10px;
     right: 20px;
+  }
+  /* 头像按钮 */
+  .login-btn {
+
     cursor: pointer;
     border-radius: 50%;
     width: 40px;
@@ -119,3 +122,60 @@
     background: rgba(0, 0, 0, 0.7);
     z-index: 999;
   }
+  
+
+.login-btn, .user-avatar {
+  cursor: pointer;
+  position: relative;
+}
+
+/* 用户头像 */
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #CBDCEB;
+  color: #133E87;
+  font-weight: bold;
+  border-radius: 50%;
+}
+
+
+/* 退出菜单 */
+.logout-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background-color: white;
+  color: black;
+  padding: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  visibility: hidden; /* 默认隐藏 */
+  opacity: 0; /* 透明度为 0 */
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* 显示退出菜单 */
+.user-avatar:hover .logout-menu,
+.user-avatar:focus-within .logout-menu {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* 菜单按钮样式 */
+.logout-menu button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #133E87;
+  font-size: 14px;
+  padding: 10px 20px;
+  transition: background-color 0.3s ease;
+}
+
+.logout-menu button:hover {
+  background-color: #f8f8f8;
+}

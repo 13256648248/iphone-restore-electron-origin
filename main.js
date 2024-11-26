@@ -82,18 +82,34 @@ ipcMain.on("send-unique-device-id", (event, uniqueDeviceID, lang) => {
     // 拼接完整的命令
     const cmd = `"${exePath}" ${args.join(" ")}`;
 
-    // 执行命令
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Error executing exe: ${error}`);
-        return;
-      }
-      if (stderr) {
-        reject(`stderr: ${stderr}`);
-        return;
-      }
-      resolve(stdout); // 返回命令执行的输出
-    });
+// 开始执行命令
+const process = exec(cmd);
+
+// 监听命令行输出
+process.stdout.on("data", (data) => {
+  console.log("stdout:", data);
+  event.reply("restore-progress", { type: "stdout", message: data });
+});
+
+process.stderr.on("data", (data) => {
+  console.error("stderr:", data);
+  event.reply("restore-progress", { type: "stderr", message: data });
+});
+
+process.on("close", (code) => {
+  if (code === 0) {
+    console.log("Restore completed successfully.");
+    event.reply("restore-progress", { type: "complete", message: "恢复完成" });
+  } else {
+    console.error(`Process exited with code ${code}`);
+    event.reply("restore-progress", { type: "error", message: `恢复失败，退出码：${code}` });
+  }
+});
+
+process.on("error", (error) => {
+  console.error("Error during restore process:", error);
+  event.reply("restore-progress", { type: "error", message: `执行过程中出错：${error.message}` });
+});
   });
 });
 

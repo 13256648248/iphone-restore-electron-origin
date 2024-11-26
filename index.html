@@ -13,8 +13,17 @@
     <!-- Header with centered title and search icon -->
     <header class="header">
       <h1 class="title">iphoneRestore</h1>
-      <div id="login-btn" class="login-btn">login</div>
+      <div id="user-info" class="user-info">
+        <div id="login-btn" class="login-btn">Login</div>
+        <div id="user-avatar" class="user-avatar" style="display: none;">
+          <span id="user-initial">A</span>
+          <div id="logout-menu" class="logout-menu" >
+            <button id="logout-btn">Logout</button>
+          </div>
+        </div>
+      </div>
     </header>
+    
 
     <!-- Device Information Card -->
     <main class="content" id="card-box" >
@@ -55,8 +64,8 @@
 
     <!-- Bottom action buttons for language options and start button -->
     <footer class="device-actions">
-      <button class="action-btn" onclick="deviceBackUp2('zh')">中文恢复</button>
-      <button class="action-btn" onclick="deviceBackUp2('en')">English reset</button>
+      <button class="action-btn" onclick="deviceBackup('zh')">中文恢复</button>
+      <button class="action-btn" onclick="deviceBackup('en')">English reset</button>
     </footer>
   </div>
     <!-- 登录弹窗和背景遮罩层 -->
